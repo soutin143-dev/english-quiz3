@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ランダム誤答生成クイズ</title>
+
+<style>
+body{
+    font-family: "メイリオ", sans-serif;
+    background:#f5f7fa;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+.quiz-box{
+    background:white;
+    padding:30px 40px;
+    border-radius:15px;
+    box-shadow:0 5px 20px rgba(0,0,0,.1);
+    text-align:center;
+    width:350px;
+}
+h2{
+    margin-bottom:25px;
+    font-size:20px;
+}
+button{
+    width:100%;
+    padding:12px;
+    margin:6px 0;
+    font-size:16px;
+    border:none;
+    border-radius:8px;
+    background:#e8ecf3;
+    transition:.2s;
+    cursor:pointer;
+}
+button:hover{
+    background:#d1d9e6;
+}
+.correct { background:#a3e7a2 !important; }
+.wrong   { background:#ffb6b6 !important; }
+</style>
+
+</head>
+<body>
+
+<div class="quiz-box">
+    <h2 id="question">読み込み中...</h2>
+    <div id="choices"></div>
+</div>
+
+<script>
+async function loadCSV(){
+    const text = await fetch("words3.csv").then(r=>r.text());
+    const lines = text.trim().split("\n");
+    const data = lines.slice(1).map(row=>{
+        const [id,word,meaning] = row.split(",");
+        return {id,word,meaning};
+    });
+    return data;
+}
+
+function shuffle(a){return a.sort(()=>Math.random()-0.5);}
+
+async function startQuiz(){
+    const data = await loadCSV();
+    const q = data[Math.floor(Math.random()*data.length)];
+
+    document.getElementById("question").innerText = `「${q.word}」の意味は？`;
+
+    const wrong = shuffle(
+        data.filter(d=>d.meaning!==q.meaning).map(d=>d.meaning)
+    ).slice(0,3);
+
+    const choices = shuffle([q.meaning, ...wrong]);
+
+    document.getElementById("choices").innerHTML =
+        choices.map(c=>
+            `<button onclick="check(this,'${c}','${q.meaning}')">${c}</button>`
+        ).join("");
+}
+
+function check(btn,ans,correct){
+    btn.classList.add(ans===correct ? "correct":"wrong");
+    setTimeout(startQuiz,700);
+}
+
+startQuiz();
+</script>
+</body>
+</html>
